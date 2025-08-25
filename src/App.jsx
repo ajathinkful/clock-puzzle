@@ -1,21 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import AnimatedHand from "./AnimatedHand";
 
 // Solvable puzzle generator
 function generateSolvablePuzzle(N = 6) {
-  // Step 1: random solution sequence
   let sequence = Array.from({ length: N }, (_, i) => i).sort(() => Math.random() - 0.5);
-
   const numbers = Array(N).fill(0);
 
-  // Step 2: assign numbers so hands reach the next position
   for (let i = 0; i < N; i++) {
     const current = sequence[i];
     const next = sequence[(i + 1) % N];
-
     const distRight = (next - current + N) % N;
     const distLeft = (current - next + N) % N;
-
-    // Randomly choose left or right hand distance
     numbers[current] = Math.random() < 0.5 ? distRight : distLeft;
   }
 
@@ -26,10 +21,12 @@ export default function App() {
   const [numbers, setNumbers] = useState([]);
   const [N, setN] = useState(6);
   const [visited, setVisited] = useState([]);
-  const [hands, setHands] = useState([null, null]);
+  const [hands, setHands] = useState([0, 0]); // start both at 12 o'clock
   const [sequence, setSequence] = useState([]);
   const [message, setMessage] = useState("");
   const [solution, setSolution] = useState([]);
+
+  const prevHands = useRef([0, 0]); // previous positions for animation
 
   const radius = 150;
   const centerX = 200;
@@ -41,13 +38,14 @@ export default function App() {
     setN(puzzle.N);
     setVisited([]);
     setSequence([]);
-    setHands([null, null]);
+    setHands([0, 0]);
+    prevHands.current = [0, 0];
     setMessage("");
     setSolution(puzzle.sequence);
   };
 
   useEffect(() => {
-    newPuzzle(6); // start with easy puzzle
+    newPuzzle(6);
   }, []);
 
   const handleClick = (index) => {
@@ -56,6 +54,7 @@ export default function App() {
       const clockwise = (index + k) % N;
       const counterClockwise = (index - k + N) % N;
 
+      prevHands.current = [...hands];
       const newHands = [clockwise, counterClockwise];
       const newVisited = [...visited, index];
       const newSequence = [...sequence, index];
@@ -123,13 +122,25 @@ export default function App() {
           );
         })}
 
-        {hands.map((h, i) => {
-          if (h === null) return null;
-          const angle = (h / N) * 2 * Math.PI - Math.PI / 2;
-          const x = centerX + radius * Math.cos(angle);
-          const y = centerY + radius * Math.sin(angle);
-          return <line key={i} x1={centerX} y1={centerY} x2={x} y2={y} stroke="#f00" strokeWidth={2} />;
-        })}
+        {/* Animated Hands */}
+        <AnimatedHand
+          fromIndex={prevHands.current[0]}
+          toIndex={hands[0]}
+          N={N}
+          radius={radius}
+          centerX={centerX}
+          centerY={centerY}
+          color="#f00" // red
+        />
+        <AnimatedHand
+          fromIndex={prevHands.current[1]}
+          toIndex={hands[1]}
+          N={N}
+          radius={radius}
+          centerX={centerX}
+          centerY={centerY}
+          color="#00f" // blue
+        />
       </svg>
 
       <div style={{ marginTop: "20px" }}>
@@ -137,7 +148,8 @@ export default function App() {
           onClick={() => {
             setVisited([]);
             setSequence([]);
-            setHands([null, null]);
+            setHands([0, 0]);
+            prevHands.current = [0, 0];
             setMessage("");
           }}
           style={{ marginRight: "10px" }}
