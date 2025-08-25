@@ -1,16 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Solvable puzzle generator
+function generatePuzzle(difficulty = "easy") {
+  let N, minNum, maxNum;
+  if (difficulty === "easy") {
+    N = 6;
+    minNum = 1;
+    maxNum = 3;
+  } else if (difficulty === "medium") {
+    N = Math.floor(Math.random() * 3) + 8; // 8–10
+    minNum = 1;
+    maxNum = 5;
+  } else if (difficulty === "hard") {
+    N = 12;
+    minNum = 1;
+    maxNum = 6;
+  }
+
+  // Step 1: random solution sequence
+  let sequence = Array.from({ length: N }, (_, i) => i).sort(() => Math.random() - 0.5);
+
+  // Step 2: assign numbers to match the sequence
+  const numbers = Array(N).fill(0);
+  for (let i = 0; i < N; i++) {
+    const current = sequence[i];
+    const next = sequence[(i + 1) % N];
+    let k = (next - current + N) % N;
+    if (k < minNum || k > maxNum) {
+      k = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
+    }
+    numbers[current] = k;
+  }
+
+  return { numbers, N };
+}
 
 export default function App() {
-  const numbers = [2, 3, 2, 2, 2, 2]; // fixed puzzle
-  const N = numbers.length;
-  const radius = 150;
-  const centerX = 200;
-  const centerY = 200;
-
+  const [numbers, setNumbers] = useState([]);
+  const [N, setN] = useState(6);
   const [visited, setVisited] = useState([]);
   const [hands, setHands] = useState([null, null]);
   const [sequence, setSequence] = useState([]);
   const [message, setMessage] = useState("");
+
+  const radius = 150;
+  const centerX = 200;
+  const centerY = 200;
+
+  // Generate new puzzle
+  const newPuzzle = (difficulty = "easy") => {
+    const puzzle = generatePuzzle(difficulty);
+    setNumbers(puzzle.numbers);
+    setN(puzzle.N);
+    setVisited([]);
+    setSequence([]);
+    setHands([null, null]);
+    setMessage("");
+  };
+
+  useEffect(() => {
+    newPuzzle("easy"); // initialize first puzzle
+  }, []);
 
   const handleClick = (index) => {
     if ((sequence.length === 0 || hands.includes(index)) && !visited.includes(index)) {
@@ -33,14 +83,12 @@ export default function App() {
       }
 
       // Check for game over: no valid moves left
-      const remainingPositions = numbers
-        .map((_, i) => i)
-        .filter((i) => !newVisited.includes(i));
+      const remainingPositions = numbers.map((_, i) => i).filter((i) => !newVisited.includes(i));
       const validNext = newHands.filter((h) => !newVisited.includes(h));
       if (validNext.length === 0 && remainingPositions.length > 0) {
         setMessage("❌ Game Over! Try Again.");
       } else {
-        setMessage(""); // clear message if game is still playable
+        setMessage("");
       }
     }
   };
@@ -53,7 +101,13 @@ export default function App() {
 
   return (
     <div style={{ textAlign: "center", marginTop: "20px" }}>
-      <h2>Dual-Hand Circle Puzzle (Fixed Example)</h2>
+      <h2>Dual-Hand Circle Puzzle</h2>
+
+      <div style={{ marginBottom: "10px" }}>
+        <button onClick={() => newPuzzle("easy")} style={{ marginRight: "5px" }}>Easy</button>
+        <button onClick={() => newPuzzle("medium")} style={{ marginRight: "5px" }}>Medium</button>
+        <button onClick={() => newPuzzle("hard")}>Hard</button>
+      </div>
 
       <svg width={400} height={400}>
         {numbers.map((num, i) => {
