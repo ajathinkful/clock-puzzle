@@ -1,38 +1,25 @@
 import { useState, useEffect } from "react";
 
 // Solvable puzzle generator
-function generatePuzzle(difficulty = "easy") {
-  let N, minNum, maxNum;
-  if (difficulty === "easy") {
-    N = 6;
-    minNum = 1;
-    maxNum = 3;
-  } else if (difficulty === "medium") {
-    N = Math.floor(Math.random() * 3) + 8; // 8–10
-    minNum = 1;
-    maxNum = 5;
-  } else if (difficulty === "hard") {
-    N = 12;
-    minNum = 1;
-    maxNum = 6;
-  }
-
+function generateSolvablePuzzle(N = 6) {
   // Step 1: random solution sequence
   let sequence = Array.from({ length: N }, (_, i) => i).sort(() => Math.random() - 0.5);
 
-  // Step 2: assign numbers to match the sequence
   const numbers = Array(N).fill(0);
+
+  // Step 2: assign numbers so hands reach the next position
   for (let i = 0; i < N; i++) {
     const current = sequence[i];
     const next = sequence[(i + 1) % N];
-    let k = (next - current + N) % N;
-    if (k < minNum || k > maxNum) {
-      k = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
-    }
-    numbers[current] = k;
+
+    const distRight = (next - current + N) % N;
+    const distLeft = (current - next + N) % N;
+
+    // Randomly choose left or right hand distance
+    numbers[current] = Math.random() < 0.5 ? distRight : distLeft;
   }
 
-  return { numbers, N };
+  return { numbers, sequence, N };
 }
 
 export default function App() {
@@ -42,24 +29,25 @@ export default function App() {
   const [hands, setHands] = useState([null, null]);
   const [sequence, setSequence] = useState([]);
   const [message, setMessage] = useState("");
+  const [solution, setSolution] = useState([]);
 
   const radius = 150;
   const centerX = 200;
   const centerY = 200;
 
-  // Generate new puzzle
-  const newPuzzle = (difficulty = "easy") => {
-    const puzzle = generatePuzzle(difficulty);
+  const newPuzzle = (size = 6) => {
+    const puzzle = generateSolvablePuzzle(size);
     setNumbers(puzzle.numbers);
     setN(puzzle.N);
     setVisited([]);
     setSequence([]);
     setHands([null, null]);
     setMessage("");
+    setSolution(puzzle.sequence);
   };
 
   useEffect(() => {
-    newPuzzle("easy"); // initialize first puzzle
+    newPuzzle(6); // start with easy puzzle
   }, []);
 
   const handleClick = (index) => {
@@ -76,13 +64,11 @@ export default function App() {
       setVisited(newVisited);
       setSequence(newSequence);
 
-      // Check for solved
       if (newVisited.length === N) {
         setMessage("🎉 Solved!");
         return;
       }
 
-      // Check for game over: no valid moves left
       const remainingPositions = numbers.map((_, i) => i).filter((i) => !newVisited.includes(i));
       const validNext = newHands.filter((h) => !newVisited.includes(h));
       if (validNext.length === 0 && remainingPositions.length > 0) {
@@ -93,7 +79,6 @@ export default function App() {
     }
   };
 
-  // valid positions for next move
   const validPositions =
     sequence.length === 0
       ? numbers.map((_, i) => i).filter((i) => !visited.includes(i))
@@ -104,9 +89,9 @@ export default function App() {
       <h2>Dual-Hand Circle Puzzle</h2>
 
       <div style={{ marginBottom: "10px" }}>
-        <button onClick={() => newPuzzle("easy")} style={{ marginRight: "5px" }}>Easy</button>
-        <button onClick={() => newPuzzle("medium")} style={{ marginRight: "5px" }}>Medium</button>
-        <button onClick={() => newPuzzle("hard")}>Hard</button>
+        <button onClick={() => newPuzzle(6)} style={{ marginRight: "5px" }}>Easy</button>
+        <button onClick={() => newPuzzle(9)} style={{ marginRight: "5px" }}>Medium</button>
+        <button onClick={() => newPuzzle(12)}>Hard</button>
       </div>
 
       <svg width={400} height={400}>
@@ -155,8 +140,16 @@ export default function App() {
             setHands([null, null]);
             setMessage("");
           }}
+          style={{ marginRight: "10px" }}
         >
           Reset
+        </button>
+        <button
+          onClick={() => {
+            setMessage("💡 Solution: " + solution.map((i) => i + 1).join(" → "));
+          }}
+        >
+          Solve
         </button>
       </div>
 
