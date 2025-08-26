@@ -20,15 +20,14 @@ export default function App() {
   const [numbers, setNumbers] = useState([]);
   const [N, setN] = useState(6);
   const [visited, setVisited] = useState([]);
-  const [hands, setHands] = useState([null, null]); // end positions of hands
+  const [hands, setHands] = useState([null, null]);
   const [sequence, setSequence] = useState([]);
   const [message, setMessage] = useState("");
   const [solution, setSolution] = useState([]);
 
-  const prevHands = useRef([null, null]); // start positions for animation
-
-  const radius = 150;      // number circle radius
-  const handRadius = 110;  // shorter hands
+  const prevHands = useRef([null, null]);
+  const radius = 150;
+  const handRadius = 110;
   const centerX = 200;
   const centerY = 200;
 
@@ -48,17 +47,25 @@ export default function App() {
     newPuzzle(6);
   }, []);
 
-  const handleClick = (index) => {
+  const handleClick = async (index) => {
     if (!visited.includes(index) && (sequence.length === 0 || hands.includes(index))) {
       const k = numbers[index];
       const clockwise = (index + k) % N;
       const counterClockwise = (index - k + N) % N;
 
-      // For both first and later clicks:
-      // hands start at the clicked index
-      prevHands.current = [index, index];
+      const prevRed = prevHands.current[0] !== null ? prevHands.current[0] : index;
+      const prevBlue = prevHands.current[1] !== null ? prevHands.current[1] : index;
 
-      // then rotate outward
+      // Step 1: snap the opposite hand to clicked position
+      if (hands[0] !== index && hands[1] !== index) {
+        // Determine which hand was not used (pick the closer? simplest: blue)
+        setHands([index, index]);
+        await new Promise((resolve) => setTimeout(resolve, 500)); // wait for snap animation
+      }
+
+      prevHands.current = [index, index]; // update prevHands after snap
+
+      // Step 2: move both hands outward from clicked position
       setHands([clockwise, counterClockwise]);
 
       const newVisited = [...visited, index];
@@ -127,7 +134,6 @@ export default function App() {
           );
         })}
 
-        {/* Red = clockwise, Blue = counter-clockwise */}
         <AnimatedHand
           fromIndex={prevHands.current[0]}
           toIndex={hands[0]}
@@ -136,6 +142,7 @@ export default function App() {
           centerX={centerX}
           centerY={centerY}
           color="#f00"
+          direction="clockwise"
         />
         <AnimatedHand
           fromIndex={prevHands.current[1]}
@@ -145,6 +152,7 @@ export default function App() {
           centerX={centerX}
           centerY={centerY}
           color="#00f"
+          direction="anticlockwise"
         />
       </svg>
 
