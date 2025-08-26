@@ -56,16 +56,15 @@ export default function App() {
       const prevRed = prevHands.current[0] !== null ? prevHands.current[0] : index;
       const prevBlue = prevHands.current[1] !== null ? prevHands.current[1] : index;
 
-      // Step 1: snap the opposite hand to clicked position
+      // Step 1: snap the opposite hand to clicked position if needed
       if (hands[0] !== index && hands[1] !== index) {
-        // Determine which hand was not used (pick the closer? simplest: blue)
         setHands([index, index]);
-        await new Promise((resolve) => setTimeout(resolve, 500)); // wait for snap animation
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      prevHands.current = [index, index]; // update prevHands after snap
+      prevHands.current = [index, index]; // update after snap
 
-      // Step 2: move both hands outward from clicked position
+      // Step 2: move both outward
       setHands([clockwise, counterClockwise]);
 
       const newVisited = [...visited, index];
@@ -94,6 +93,15 @@ export default function App() {
     sequence.length === 0
       ? numbers.map((_, i) => i).filter((i) => !visited.includes(i))
       : hands.filter((i) => !visited.includes(i));
+
+  // 🎨 Hand colors depending on game state
+  let handColorRed = "#f00";
+  let handColorBlue = "#00f";
+  if (message.includes("Solved")) {
+    handColorRed = handColorBlue = "green";
+  } else if (message.includes("Game Over")) {
+    handColorRed = handColorBlue = "grey";
+  }
 
   return (
     <div style={{ textAlign: "center", marginTop: "20px" }}>
@@ -141,7 +149,7 @@ export default function App() {
           handRadius={handRadius}
           centerX={centerX}
           centerY={centerY}
-          color="#f00"
+          color={handColorRed}
           direction="clockwise"
         />
         <AnimatedHand
@@ -151,7 +159,7 @@ export default function App() {
           handRadius={handRadius}
           centerX={centerX}
           centerY={centerY}
-          color="#00f"
+          color={handColorBlue}
           direction="anticlockwise"
         />
       </svg>
