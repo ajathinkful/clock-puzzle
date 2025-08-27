@@ -1,7 +1,6 @@
+// TimeTrial.jsx
 import { useState, useEffect, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import AnimatedHand from "./AnimatedHand";
-import TimeTrial from "./TimeTrial";
 
 function generateSolvablePuzzle(N = 6) {
   let sequence = Array.from({ length: N }, (_, i) => i).sort(() => Math.random() - 0.5);
@@ -18,14 +17,16 @@ function generateSolvablePuzzle(N = 6) {
   return { numbers, sequence, N };
 }
 
-export default function App() {
+export default function TimeTrial() {
+  // Define a series of 6 puzzles: 2 easy (6), 2 medium (9), 2 hard (12)
+  const puzzleSizes = [6, 6, 9, 9, 12, 12];
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [numbers, setNumbers] = useState([]);
   const [N, setN] = useState(6);
   const [visited, setVisited] = useState([]);
   const [hands, setHands] = useState([null, null]);
   const [sequence, setSequence] = useState([]);
   const [message, setMessage] = useState("");
-  const [solution, setSolution] = useState([]);
 
   const prevHands = useRef([null, null]);
   const radius = 150;
@@ -33,7 +34,9 @@ export default function App() {
   const centerX = 200;
   const centerY = 200;
 
-  const newPuzzle = (size = 6) => {
+  // Initialize current puzzle
+  useEffect(() => {
+    const size = puzzleSizes[currentIndex];
     const puzzle = generateSolvablePuzzle(size);
     setNumbers(puzzle.numbers);
     setN(puzzle.N);
@@ -42,12 +45,7 @@ export default function App() {
     setHands([null, null]);
     prevHands.current = [null, null];
     setMessage("");
-    setSolution(puzzle.sequence);
-  };
-
-  useEffect(() => {
-    newPuzzle(6);
-  }, []);
+  }, [currentIndex]);
 
   const handleClick = async (index) => {
     if (!visited.includes(index) && (sequence.length === 0 || hands.includes(index))) {
@@ -55,18 +53,12 @@ export default function App() {
       const clockwise = (index + k) % N;
       const counterClockwise = (index - k + N) % N;
 
-      const prevRed = prevHands.current[0] !== null ? prevHands.current[0] : index;
-      const prevBlue = prevHands.current[1] !== null ? prevHands.current[1] : index;
-
-      // Step 1: snap the opposite hand to clicked position if needed
       if (hands[0] !== index && hands[1] !== index) {
         setHands([index, index]);
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      prevHands.current = [index, index]; // update after snap
-
-      // Step 2: move both outward
+      prevHands.current = [index, index];
       setHands([clockwise, counterClockwise]);
 
       const newVisited = [...visited, index];
@@ -74,13 +66,11 @@ export default function App() {
       setVisited(newVisited);
       setSequence(newSequence);
 
-      // Check solved
       if (newVisited.length === N) {
         setMessage("🎉 Solved!");
         return;
       }
 
-      // Check game over
       const remainingPositions = numbers.map((_, i) => i).filter((i) => !newVisited.includes(i));
       const validNext = [clockwise, counterClockwise].filter((h) => !newVisited.includes(h));
       if (validNext.length === 0 && remainingPositions.length > 0) {
@@ -96,7 +86,6 @@ export default function App() {
       ? numbers.map((_, i) => i).filter((i) => !visited.includes(i))
       : hands.filter((i) => !visited.includes(i));
 
-  // 🎨 Hand colors depending on game state
   let handColorRed = "#f00";
   let handColorBlue = "#00f";
   if (message.includes("Solved")) {
@@ -105,16 +94,25 @@ export default function App() {
     handColorRed = handColorBlue = "grey";
   }
 
+  const resetCurrentPuzzle = () => {
+    setVisited([]);
+    setSequence([]);
+    setHands([null, null]);
+    prevHands.current = [null, null];
+    setMessage("");
+  };
+
+  const nextPuzzle = () => {
+    if (currentIndex < puzzleSizes.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      setMessage("🏁 All puzzles completed!");
+    }
+  };
+
   return (
     <div style={{ textAlign: "center", marginTop: "20px" }}>
-      <h2>Dual-Hand Circle Puzzle</h2>
-      
-
-      <div style={{ marginBottom: "10px" }}>
-        <button onClick={() => newPuzzle(6)} style={{ marginRight: "5px" }}>Easy</button>
-        <button onClick={() => newPuzzle(9)} style={{ marginRight: "5px" }}>Medium</button>
-        <button onClick={() => newPuzzle(12)}>Hard</button>
-      </div>
+      <h2>Time Trial Puzzle ({currentIndex + 1} / {puzzleSizes.length})</h2>
 
       <svg width={400} height={400}>
         {numbers.map((num, i) => {
@@ -168,25 +166,10 @@ export default function App() {
       </svg>
 
       <div style={{ marginTop: "20px" }}>
-        <button
-          onClick={() => {
-            setVisited([]);
-            setSequence([]);
-            setHands([null, null]);
-            prevHands.current = [null, null];
-            setMessage("");
-          }}
-          style={{ marginRight: "10px" }}
-        >
-          Reset
+        <button onClick={resetCurrentPuzzle} style={{ marginRight: "10px" }}>
+          Reset Current Puzzle
         </button>
-        <button
-          onClick={() => {
-            setMessage("💡 Solution: " + solution.map((i) => i + 1).join(" → "));
-          }}
-        >
-          Solve
-        </button>
+        <button onClick={nextPuzzle}>Next Puzzle</button>
       </div>
 
       <div style={{ marginTop: "10px", fontSize: "18px", color: "#333" }}>{message}</div>
