@@ -138,7 +138,7 @@ export default function App() {
                 onClick={() => isValid && handleClick(i)}
                 style={{ cursor: isValid ? "pointer" : "not-allowed" }}
               />
-              <text x={x} y={y + 5} textAnchor="middle" fill="#fff" fontSize="14">
+              <text x={x} y={y + 5} textAnchor="middle" fill="#fff" fontSize="14" pointerEvents="none" style={{ userSelect: "none" }}>
                 {num}
               </text>
             </g>
