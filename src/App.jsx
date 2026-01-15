@@ -132,7 +132,8 @@ export default function App() {
           const isValid = validPositions.includes(i);
 
           return (
-            <g key={i}>
+            <g key={i} onClick={() => isValid && handleClick(i)}
+  style={{ cursor: isValid ? "pointer" : "not-allowed" }}>
               <circle
                 cx={x}
                 cy={y}
@@ -140,10 +141,9 @@ export default function App() {
                 fill={isVisited ? "#aaa" : isHand ? "#f00" : isValid ? "#0af" : "#666"}
                 stroke="#000"
                 strokeWidth={2}
-                onClick={() => isValid && handleClick(i)}
-                style={{ cursor: isValid ? "pointer" : "not-allowed" }}
+                
               />
-              <text x={x} y={y + 5} textAnchor="middle" fill="#fff" fontSize="14" pointerEvents="none" style={{ userSelect: "none" }}>
+              <text x={x} y={y + 5} textAnchor="middle" fill="#fff" fontSize="14" pointerEvents="none" >
                 {num}
               </text>
             </g>

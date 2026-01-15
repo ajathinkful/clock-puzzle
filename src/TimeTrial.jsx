@@ -152,7 +152,12 @@ export default function TimeTrial() {
       <h2>Time Trial Puzzle ({currentIndex + 1} / {puzzleSizes.length})</h2>
       <p>Time Left: {timeLeft}s</p>
 
-      <svg width={400} height={400}>
+      <svg width={400} height={400}  style={{
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    WebkitTouchCallout: "none",
+    touchAction: "manipulation",
+  }}>
         {numbers.map((num, i) => {
           const angle = (i / N) * 2 * Math.PI - Math.PI / 2;
           const x = centerX + radius * Math.cos(angle);
@@ -174,7 +179,7 @@ export default function TimeTrial() {
                 onClick={() => isValid && handleClick(i)}
                 style={{ cursor: isValid ? "pointer" : "not-allowed" }}
               />
-              <text x={x} y={y + 5} textAnchor="middle" fill="#fff" fontSize="14">
+              <text x={x} y={y + 5} textAnchor="middle" fill="#fff" fontSize="14" pointerEvents="none">
                 {num}
               </text>
             </g>
