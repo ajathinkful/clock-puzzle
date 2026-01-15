@@ -49,6 +49,28 @@ export default function MainLayout() {
           ☕ Buy Me a Coffee
         </a>
       </div>
+      <div style={{ textAlign: "center", marginBottom: "20px", fontSize: "14px", color: "#e72b7aff" }}>
+  Reach out to me here if you want to connect:{" "}
+   <a
+    href="mailto:jimmyappleturkey@gmail.com"
+    className="email-link"
+  >
+    jimmyappleturkey@gmail.com
+  </a>
+  <style>
+    {`
+      .email-link {
+        color: #7580e6;
+        text-decoration: none;
+        transition: color 0.3s;
+      }
+      .email-link:hover {
+        color: #0df020ff; /* Change to whatever hover color you like */
+      }
+    `}
+  </style>
+</div>
+
 
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
         <Link to="/">Main Puzzle</Link> |
